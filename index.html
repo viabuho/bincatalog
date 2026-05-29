@@ -491,7 +491,7 @@ async function runAI(){
 
 // ── HELPERS ───────────────────────────────────────────────
 function rc(room){return ROOM_CFG[room]||ROOM_CFG.Other}
-function nextId(){if(!bins.length)return"BIN-001";const m=Math.max(...bins.map(b=>parseInt((b.id||"").replace(/\D/g,""))||0));return"BIN-"+String(m+1).padStart(3,"0")}
+function nextId(){if(!bins.length)return"BIN-0001";const m=Math.max(...bins.map(b=>parseInt((b.id||"").replace(/\D/g,""))||0));return"BIN-"+String(m+1).padStart(4,"0")}
 function qrText(bin){return`${bin.id} | ${bin.category} | ${bin.room} | ${bin.summary||""} | ${bin.tags||""}`}
 function qrUrl(bin){
   const deepLink="https://bincatalog-srm.netlify.app/?bin="+encodeURIComponent(bin.id);
@@ -523,7 +523,7 @@ function renderList(){
   el.innerHTML=filtered.map(b=>{
     const r=rc(b.room);
     const imgEl=b.thumbUrl?`<img class="bin-thumb" src="${b.thumbUrl}" onerror="this.style.display='none'">`:`<div class="bin-emoji">${r.emoji}</div>`;
-    return`<div class="bin-card" style="border-left-color:${r.color}" onclick="showDetail('${b.id}')">${imgEl}<div class="bin-info"><div class="bin-id">${b.id}</div><div class="bin-cat">${b.category||"Uncategorized"}</div>${b.tags?`<div class="bin-tags">${b.tags}</div>`:""}</div><div class="bin-arrow">&#8250;</div></div>`;
+    return`<div class="bin-card" style="border-left-color:${r.color}" onclick="showDetail('${b.id}')">${imgEl}<div class="bin-info"><div class="bin-id">${b.id}</div><div class="bin-cat">${b.category||"Uncategorized"}, ${b.room||""}</div>${b.tags?`<div class="bin-tags">${b.tags}</div>`:""}</div><div class="bin-arrow">&#8250;</div></div>`;
   }).join("");
 }
 
@@ -532,7 +532,10 @@ function showAdd(){
   editingId=null;
   currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
   document.getElementById("add-title").textContent="New Bin";
-  document.getElementById("f-id").value=nextId();
+  const newId=nextId();
+  document.getElementById("f-id").value=newId;
+  document.getElementById("f-id").readOnly=true;
+  document.getElementById("f-id").style.opacity="0.5";
   document.getElementById("f-items").value="";
   document.getElementById("f-cat").value="";
   document.getElementById("f-room").value="Other";
@@ -555,6 +558,8 @@ function editCurrent(){
   currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
   document.getElementById("add-title").textContent="Edit "+bin.id;
   document.getElementById("f-id").value=bin.id;
+  document.getElementById("f-id").readOnly=true;
+  document.getElementById("f-id").style.opacity="0.5";
   document.getElementById("f-items").value=bin.items||"";
   document.getElementById("f-cat").value=bin.category||"";
   document.getElementById("f-room").value=bin.room||"Other";
@@ -632,7 +637,7 @@ function showDetail(id){
   qr.src=qrUrl(bin);qr.onerror=function(){this.style.opacity=".3"};
   // Populate printable label fields
   document.getElementById("d-qr-binid").textContent=bin.id;
-  document.getElementById("d-qr-category").textContent=bin.category||"Uncategorized";
+  document.getElementById("d-qr-category").textContent=(bin.category||"Uncategorized")+(bin.room?", "+bin.room:"");
   document.getElementById("d-qr-summary").textContent=bin.summary||"";
   const roomEl=document.getElementById("d-qr-room");
   const roomColor=rc(bin.room).color;
