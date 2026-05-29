@@ -204,17 +204,18 @@ select.form-ctrl{cursor:pointer}
     </div>
     <div class="form-group">
       <div class="form-label">Room / Area</div>
-      <select class="form-ctrl" id="f-room">
+      <input class="form-ctrl" id="f-room" list="room-list" placeholder="Type or pick a room..." autocomplete="off" autocorrect="off">
+      <datalist id="room-list">
         <option>Kitchen</option><option>Garage</option><option>Bedroom</option>
         <option>Office</option><option>Attic</option><option>Basement</option>
         <option>Kids</option><option>Holiday</option><option>Clothing</option>
         <option>Tools</option><option>Sports</option><option>Books</option>
-        <option>Electronics</option><option>Seasonal</option><option selected>Other</option>
-      </select>
+        <option>Electronics</option><option>Seasonal</option><option>Other</option>
+      </datalist>
     </div>
     <div class="form-group">
-      <div class="form-label">Tags</div>
-      <input class="form-ctrl" id="f-tags" placeholder="comma-separated keywords" autocorrect="off">
+      <div class="form-label">Tags <span style="font-size:10px;color:#7c5cfc;letter-spacing:.06em;font-family:var(--font-h)">&#10022; AI GENERATED</span></div>
+      <input class="form-ctrl" id="f-tags" placeholder="Take a photo or describe contents, then tap AI Categorize" autocorrect="off" readonly style="opacity:0.6;cursor:default;">
     </div>
     <div class="form-group">
       <div class="form-label">Summary</div>
