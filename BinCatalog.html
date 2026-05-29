@@ -494,7 +494,7 @@ function rc(room){return ROOM_CFG[room]||ROOM_CFG.Other}
 function nextId(){if(!bins.length)return"BIN-001";const m=Math.max(...bins.map(b=>parseInt((b.id||"").replace(/\D/g,""))||0));return"BIN-"+String(m+1).padStart(3,"0")}
 function qrText(bin){return`${bin.id} | ${bin.category} | ${bin.room} | ${bin.summary||""} | ${bin.tags||""}`}
 function qrUrl(bin){
-  const deepLink="https://stalwart-kringle-d558c4.netlify.app/?bin="+encodeURIComponent(bin.id);
+  const deepLink="https://bincatalog-srm.netlify.app/?bin="+encodeURIComponent(bin.id);
   return"https://api.qrserver.com/v1/create-qr-code/?size=130x130&color=111827&bgcolor=ffffff&data="+encodeURIComponent(deepLink);
 }
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500)}
