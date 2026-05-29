@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bin Catalog">
+<title>Bin Catalog</title>
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwSy8kip2_FLJEQYcAU5i_z09RHYBvlX5KXEX2exOUKjflF25jqR2sbTGaat52FjDOYjA/exec";
+const SECRET    = "bincatalog2026";
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b25;--card:#1c2333;--border:#252d3d;--border2:#2e3a50;--amber:#f4a820;--amber2:#e09010;--red:#e05252;--purple:#7c5cfc;--text:#dce4f0;--muted:#6b7a94;--faint:#2e3a50;--font-h:'Barlow Condensed',sans-serif;--font-b:'Barlow',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font-b);color:var(--text);display:flex;flex-direction:column;height:100dvh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:calc(12px + var(--safe-top)) 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-family:var(--font-h);font-size:22px;font-weight:800;letter-spacing:.06em;color:var(--amber);text-transform:uppercase}
+.topbar-sub{font-size:11px;color:var(--muted);font-family:var(--font-h);letter-spacing:.08em;margin-top:1px}
+.icon-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;flex-shrink:0}
+.icon-btn:active{background:var(--border2)}
+.icon-btn.amber{background:var(--amber);border-color:var(--amber2);font-size:20px}
+.icon-btn.amber:active{background:var(--amber2)}
+.sync-bar{display:flex;align-items:center;justify-content:center;gap:7px;padding:5px 12px;font-family:var(--font-h);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.sync-bar.syncing{background:#1a2a3a;color:#60a5fa}
+.sync-bar.synced{background:#0f2a1a;color:#4ade80}
+.sync-bar.error{background:#2a1010;color:#f87171}
+.sync-bar.hidden{display:none}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.stats-row{display:flex;border-bottom:1px solid var(--border)}
+.stat{flex:1;text-align:center;padding:10px 4px;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:var(--font-h);font-size:24px;font-weight:800;color:var(--amber);line-height:1}
+.stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-family:var(--font-h)}
+.search-wrap{padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
+.search-ico{color:var(--muted);font-size:16px;flex-shrink:0}
+.search-inp{flex:1;background:none;border:none;color:var(--text);font-family:var(--font-b);font-size:15px;outline:none}
+.search-inp::placeholder{color:var(--faint)}
+.search-clear{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;padding:0 2px}
+.bin-list{padding:10px}
+.bin-card{background:var(--card);border:1px solid var(--border);border-left-width:3px;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-user-select:none}
+.bin-card:active{background:var(--border)}
+.bin-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--border2)}
+.bin-emoji{font-size:26px;flex-shrink:0}
+.bin-info{flex:1;min-width:0}
+.bin-id{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--amber);letter-spacing:.08em}
+.bin-cat{font-family:var(--font-h);font-size:18px;font-weight:600;color:var(--text);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bin-tags{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bin-arrow{color:var(--faint);font-size:20px;flex-shrink:0}
+.empty{text-align:center;padding:60px 24px 40px}
+.empty-icon{font-size:52px;opacity:.3;margin-bottom:14px}
+.empty-title{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.empty-desc{font-size:14px;color:var(--faint);margin-top:8px;line-height:1.6}
+.bottom-bar{padding:10px 12px calc(10px + var(--safe-bot));border-top:1px solid var(--border);background:var(--surface);display:flex;gap:8px;flex-shrink:0}
+.btn{flex:1;padding:13px 10px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font-h);font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .1s}
+.btn:active{opacity:.8;transform:scale(.97)}
+.btn:disabled{opacity:.35}
+.btn-primary{background:var(--amber);color:#000}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border2)}
+.btn-danger{background:#3a1a1a;color:var(--red);border:1px solid #5a2a2a}
+.form-group{padding:14px 14px 0}
+.form-label{font-family:var(--font-h);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.form-ctrl{width:100%;background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:12px 14px;font-family:var(--font-b);font-size:16px;outline:none;transition:border-color .15s;-webkit-appearance:none}
+.form-ctrl:focus{border-color:var(--amber)}
+textarea.form-ctrl{resize:none;min-height:80px;line-height:1.5}
+select.form-ctrl{cursor:pointer}
+/* CAMERA SECTION */
+.camera-section{padding:14px 14px 0}
+.camera-btn{width:100%;padding:16px;background:var(--card);border:2px dashed var(--border2);border-radius:12px;color:var(--muted);font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s,color .15s}
+.camera-btn:active{border-color:var(--amber);color:var(--amber)}
+.photo-preview-wrap{position:relative;margin-top:10px;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--border2)}
+.photo-preview{width:100%;max-height:220px;object-fit:cover;display:block}
+.photo-overlay{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+.photo-badge{background:rgba(0,0,0,.75);color:#fff;font-family:var(--font-h);font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+.photo-remove{background:rgba(180,40,40,.85);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-family:var(--font-h);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em}
+.upload-progress{padding:8px 12px;background:#1a2a3a;border-radius:8px;margin-top:8px;font-family:var(--font-h);font-size:11px;color:#60a5fa;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+/* AI BUTTON */
+.ai-btn-wrap{padding:10px 14px 0}
+.ai-btn{width:100%;padding:14px;background:linear-gradient(135deg,#5c3dbf,#3b1fa8);border:1px solid #7c5cfc55;border-radius:10px;color:#fff;font-family:var(--font-h);font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s}
+.ai-btn:active{opacity:.85}
+.ai-btn:disabled{opacity:.4}
+.ai-result{margin:10px 14px 0;background:#1a1040;border:1px solid #5c3dbf55;border-radius:10px;padding:12px 14px;animation:slideUp .25s ease}
+.ai-result-label{font-family:var(--font-h);font-size:11px;font-weight:700;letter-spacing:.1em;color:#a78bfa;text-transform:uppercase;margin-bottom:6px}
+.ai-result-text{font-size:13px;color:#c4b5fd;line-height:1.5}
+/* DETAIL */
+.detail-hero{padding:18px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.detail-emoji{font-size:42px}
+.detail-id{font-family:var(--font-h);font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--amber);text-transform:uppercase}
+.detail-cat{font-family:var(--font-h);font-size:26px;font-weight:800;color:var(--text);line-height:1.1}
+.room-chip{display:inline-block;font-family:var(--font-h);font-size:12px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:20px;border:1px solid;margin-top:4px}
+.detail-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.detail-section-label{font-family:var(--font-h);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.detail-text{font-size:14px;color:var(--text);line-height:1.7;white-space:pre-wrap}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-family:var(--font-h);font-size:12px;padding:3px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border2);color:var(--muted)}
+.detail-photo{width:100%;border-radius:10px;object-fit:cover;max-height:260px;display:block;cursor:pointer}
+.qr-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.qr-box{display:flex;gap:14px;align-items:flex-start}
+.qr-img{background:#fff;border-radius:10px;padding:10px;flex-shrink:0}
+.qr-img img{display:block;width:130px;height:130px}
+.qr-label{font-family:var(--font-h);font-size:13px;font-weight:700;color:#111;text-align:center;margin-top:5px;letter-spacing:.06em}
+.qr-hint{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.setup-card{background:#1a1040;border:1px solid #5c3dbf55;border-radius:12px;padding:18px 16px;margin-bottom:20px}
+.setup-card-label{font-family:var(--font-h);font-size:13px;font-weight:700;letter-spacing:.1em;color:#a78bfa;text-transform:uppercase;margin-bottom:8px}
+.setup-card-text{font-size:14px;color:#c4b5fd;line-height:1.6}
+.toast{position:fixed;bottom:calc(80px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(20px);background:#0f2a1a;color:#4ade80;border:1px solid #1a5a3a;border-radius:8px;padding:10px 18px;font-family:var(--font-h);font-size:13px;font-weight:600;letter-spacing:.06em;white-space:nowrap;z-index:100;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.spinner-sm{display:inline-block;width:12px;height:12px;border:2px solid rgba(100,150,255,.3);border-top-color:#60a5fa;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.spacer{height:14px}
+.screen{display:none;flex-direction:column;height:100%}
+.screen.active{display:flex}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div class="screen" id="screen-setup">
+  <div class="topbar">
+    <div><div class="topbar-title">&#128230; Bin Catalog</div><div class="topbar-sub" id="setup-sub">First-time setup</div></div>
+    <div id="setup-back-btn" style="display:none"><div class="icon-btn" onclick="showList()">&#8249;</div></div>
+  </div>
+  <div class="scroll-area" style="padding:20px 16px">
+    <div class="setup-card">
+      <div class="setup-card-label">&#10022; Anthropic API Key</div>
+      <div class="setup-card-text">Powers AI categorization and photo recognition. Stored only on this device.</div>
+    </div>
+    <div class="form-group" style="padding-left:0;padding-right:0">
+      <div class="form-label">API Key</div>
+      <input class="form-ctrl" id="setup-key" type="password" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;padding:0 2px">
+      Get your key at <strong style="color:var(--text)">console.anthropic.com</strong> &#8594; API Keys
+    </div>
+    <div style="height:20px"></div>
+    <button class="btn btn-primary" style="width:100%;font-size:16px;padding:15px" onclick="saveApiKey()">Save &amp; Open App</button>
+  </div>
+</div>
+
+<!-- LIST -->
+<div class="screen" id="screen-list">
+  <div class="topbar">
+    <div><div class="topbar-title">&#128230; Bin Catalog</div><div class="topbar-sub" id="list-sub">Loading...</div></div>
+    <div style="display:flex;gap:8px">
+      <div class="icon-btn" onclick="syncFromSheet(true)" title="Refresh">&#128260;</div>
+      <div class="icon-btn" onclick="showSetup(true)" title="Settings">&#9881;&#65039;</div>
+      <div class="icon-btn amber" onclick="showAdd()" title="Add Bin">&#65291;</div>
+    </div>
+  </div>
+  <div class="sync-bar hidden" id="sync-bar"></div>
+  <div class="scroll-area">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="search-wrap">
+      <span class="search-ico">&#128269;</span>
+      <input class="search-inp" id="search-inp" placeholder="Search bins, categories, tags..." oninput="renderList()">
+      <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">&#215;</button>
+    </div>
+    <div class="bin-list" id="bin-list"></div>
+  </div>
+</div>
+
+<!-- ADD / EDIT -->
+<div class="screen" id="screen-add">
+  <div class="topbar">
+    <div class="icon-btn" onclick="showList()">&#8249;</div>
+    <div><div class="topbar-title" id="add-title">New Bin</div></div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="scroll-area">
+    <div class="form-group">
+      <div class="form-label">Bin ID</div>
+      <input class="form-ctrl" id="f-id" placeholder="BIN-001" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <!-- CAMERA SECTION -->
+    <div class="camera-section">
+      <div class="form-label">Photo of Contents</div>
+      <button class="camera-btn" onclick="triggerCamera()">
+        <span style="font-size:22px">&#128247;</span> Take Photo of Bin Contents
+      </button>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+      <div id="photo-preview-area"></div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Keywords (optional — helps AI)</div>
+      <input class="form-ctrl" id="f-items" placeholder="e.g. Christmas, cycling gear, kitchen..." autocorrect="off">
+    </div>
+
+    <div class="ai-btn-wrap">
+      <button class="ai-btn" id="ai-btn" onclick="runAI()" disabled>&#10022; AI Categorize</button>
+    </div>
+    <div id="ai-result-box"></div>
+
+    <div class="form-group">
+      <div class="form-label">Category Label</div>
+      <input class="form-ctrl" id="f-cat" placeholder="e.g. Kitchen Cookware" autocorrect="off">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Room / Area</div>
+      <select class="form-ctrl" id="f-room">
+        <option>Kitchen</option><option>Garage</option><option>Bedroom</option>
+        <option>Office</option><option>Attic</option><option>Basement</option>
+        <option>Kids</option><option>Holiday</option><option>Clothing</option>
+        <option>Tools</option><option>Sports</option><option>Books</option>
+        <option>Electronics</option><option>Seasonal</option><option selected>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Tags</div>
+      <input class="form-ctrl" id="f-tags" placeholder="comma-separated keywords" autocorrect="off">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Summary</div>
+      <input class="form-ctrl" id="f-summary" placeholder="One-line description" autocorrect="off">
+    </div>
+    <div class="spacer"></div>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn btn-secondary" onclick="showList()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveBin()">Save Bin</button>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="screen-detail">
+  <div class="topbar">
+    <div class="icon-btn" onclick="showList()">&#8249;</div>
+    <div><div class="topbar-title" id="d-id-title"></div></div>
+    <div class="icon-btn" onclick="editCurrent()">&#9999;&#65039;</div>
+  </div>
+  <div class="scroll-area">
+    <div class="detail-hero">
+      <div class="detail-emoji" id="d-emoji"></div>
+      <div>
+        <div class="detail-id" id="d-id"></div>
+        <div class="detail-cat" id="d-cat"></div>
+        <div id="d-room-chip"></div>
+      </div>
+    </div>
+    <div class="detail-section" id="d-photo-sec" style="display:none">
+      <div class="detail-section-label">Photo</div>
+      <img id="d-photo" class="detail-photo" src="" alt="Bin contents" onclick="openPhoto()">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--font-h);letter-spacing:.06em">TAP TO OPEN FULL SIZE IN GOOGLE DRIVE</div>
+    </div>
+    <div class="detail-section" id="d-summary-sec" style="display:none">
+      <div class="detail-section-label">Summary</div>
+      <div class="detail-text" id="d-summary"></div>
+    </div>
+    <div class="detail-section" id="d-tags-sec" style="display:none">
+      <div class="detail-section-label">Tags</div>
+      <div class="tag-row" id="d-tags"></div>
+    </div>
+    <div class="detail-section" id="d-items-sec" style="display:none">
+      <div class="detail-section-label">Keywords</div>
+      <div class="detail-text" id="d-items"></div>
+    </div>
+    <div class="qr-section">
+      <div class="detail-section-label">QR Label — Screenshot to print</div>
+      <!-- PRINTABLE LABEL CARD -->
+      <div id="qr-print-card" style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="flex-shrink:0;text-align:center">
+          <img id="d-qr" src="" alt="QR Code" style="display:block;width:110px;height:110px;">
+        </div>
+        <div style="flex:1;min-width:0">
+          <div id="d-qr-binid" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#f4a820;letter-spacing:.1em;text-transform:uppercase;"></div>
+          <div id="d-qr-category" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#111;line-height:1.1;margin:2px 0 4px;"></div>
+          <div id="d-qr-room" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;letter-spacing:.06em;text-transform:uppercase;"></div>
+          <div id="d-qr-summary" style="font-size:11px;color:#555;margin-top:5px;line-height:1.4;"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+        Screenshot the white card above and print on a 2x2 inch label (Avery 22807). Scanning opens this app directly to this bin.
+      </div>
+      <button class="btn btn-secondary" style="width:100%;font-size:13px;padding:10px" onclick="copyQR()">&#128203; Copy QR Link</button>
+    </div>
+    <div style="padding:14px 16px 6px">
+      <button class="btn btn-danger" style="width:100%" onclick="deleteCurrent()">&#128465; Delete This Bin</button>
+    </div>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HIDDEN FILE INPUT for camera -->
+<input type="file" id="camera-input-hidden" accept="image/*" capture="environment" style="display:none">
+
+<script>
+const ROOM_CFG={Kitchen:{color:"#f4a820",emoji:"🍳"},Garage:{color:"#94a3b8",emoji:"🔧"},Bedroom:{color:"#a78bfa",emoji:"🛏️"},Office:{color:"#60a5fa",emoji:"💼"},Attic:{color:"#fb923c",emoji:"📦"},Basement:{color:"#64748b",emoji:"🏠"},Kids:{color:"#f472b6",emoji:"🧸"},Holiday:{color:"#f87171",emoji:"🎄"},Clothing:{color:"#34d399",emoji:"👕"},Tools:{color:"#fb923c",emoji:"🔨"},Sports:{color:"#4ade80",emoji:"⚽"},Books:{color:"#c084fc",emoji:"📚"},Electronics:{color:"#22d3ee",emoji:"📱"},Seasonal:{color:"#fbbf24",emoji:"🌸"},Other:{color:"#94a3b8",emoji:"📋"}};
+
+let bins=[],editingId=null,currentDetail=null,aiLoading=false,syncing=false;
+let currentPhotoBase64=null,currentPhotoMime=null,currentPhotoDataUrl=null;
+let pendingPhotoUpload=null; // promise that resolves to {viewUrl, thumbUrl}
+
+// ── API KEY ──────────────────────────────────────────────
+function getApiKey(){return localStorage.getItem("bincatalog_apikey")||""}
+function saveApiKey(){
+  const v=document.getElementById("setup-key").value.trim();
+  if(!v.startsWith("sk-ant-")){alert("Key should start with sk-ant-");return}
+  localStorage.setItem("bincatalog_apikey",v);
+  toast("API key saved");showList();
+}
+function showSetup(fromSettings){
+  document.getElementById("setup-key").value=getApiKey();
+  document.getElementById("setup-sub").textContent=fromSettings?"API Key Settings":"First-time setup";
+  document.getElementById("setup-back-btn").style.display=fromSettings?"block":"none";
+  showScreen("setup");
+}
+
+// ── SYNC BAR ─────────────────────────────────────────────
+function setSyncBar(state,msg){
+  const b=document.getElementById("sync-bar");
+  b.className="sync-bar "+state;
+  b.innerHTML=state==="syncing"?`<span class="spinner-sm"></span>${msg}`:msg;
+  if(state==="synced")setTimeout(()=>{b.className="sync-bar hidden"},2500);
+}
+
+// ── GOOGLE SHEETS ─────────────────────────────────────────
+async function syncFromSheet(feedback){
+  if(syncing)return;syncing=true;
+  if(feedback)setSyncBar("syncing","Syncing...");
+  try{
+    const res=await fetch(SHEET_URL+"?secret="+SECRET,{redirect:"follow"});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    bins=Array.isArray(data)?data:[];
+    renderList();
+    if(feedback)setSyncBar("synced","Synced");
+  }catch(e){if(feedback)setSyncBar("error","Sync failed")}
+  syncing=false;
+}
+
+async function pushToSheet(){
+  setSyncBar("syncing","Saving...");
+  try{
+    await fetch(SHEET_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain"},body:JSON.stringify({secret:SECRET,bins})});
+    setSyncBar("synced","Saved to Google Sheets");
+  }catch(e){
+    setSyncBar("error","Save failed - check connection");
+    localStorage.setItem("bincatalog_local",JSON.stringify(bins));
+  }
+}
+
+// ── PHOTO UPLOAD TO DRIVE ─────────────────────────────────
+async function uploadPhotoToDrive(base64,mimeType,binId){
+  const filename=binId+"-"+Date.now()+".jpg";
+  // Log payload size for debugging
+  const kb=Math.round(base64.length*0.75/1024);
+  console.log("Uploading photo:",kb,"KB, mime:",mimeType,"filename:",filename);
+  setSyncBar("syncing","Uploading "+kb+"KB photo to Drive...");
+
+  const body=JSON.stringify({secret:SECRET,action:"upload_photo",imageData:base64,mimeType:mimeType,filename:filename});
+  console.log("POST body length:",body.length);
+
+  const res=await fetch(SHEET_URL,{
+    method:"POST",
+    redirect:"follow",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:body
+  });
+
+  console.log("Upload response status:",res.status,res.type);
+  const text=await res.text();
+  console.log("Upload response body:",text.slice(0,300));
+
+  let data;
+  try{data=JSON.parse(text)}catch(e){throw new Error("Bad response: "+text.slice(0,100))}
+  if(data.error)throw new Error(data.error);
+  return data;
+}
+
+// ── CAMERA & PHOTO ────────────────────────────────────────
+function triggerCamera(){
+  const inp=document.getElementById("camera-input");
+  inp.value="";
+  inp.click();
+}
+
+function handlePhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    // Compress image using canvas before sending to API
+    const img=new Image();
+    img.onload=function(){
+      const MAX=1024; // max dimension px
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){
+        if(w>h){h=Math.round(h*(MAX/w));w=MAX;}
+        else{w=Math.round(w*(MAX/h));h=MAX;}
+      }
+      const canvas=document.createElement("canvas");
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(img,0,0,w,h);
+      const compressed=canvas.toDataURL("image/jpeg",0.75);
+      const parts=compressed.split(",");
+      currentPhotoMime="image/jpeg";
+      currentPhotoBase64=parts[1];
+      currentPhotoDataUrl=compressed;
+      const kb=Math.round(currentPhotoBase64.length*0.75/1024);
+      showPhotoPreview(compressed,kb);
+      document.getElementById("ai-btn").disabled=false;
+      // background Drive upload
+      const binId=document.getElementById("f-id").value.trim()||"BIN-TMP";
+      setSyncBar("syncing","Uploading photo to Drive...");
+      pendingPhotoUpload=uploadPhotoToDrive(currentPhotoBase64,currentPhotoMime,binId)
+        .then(r=>{setSyncBar("synced","Photo uploaded to Drive");console.log("Drive result:",r);return r})
+        .catch(e=>{setSyncBar("error","Drive upload failed: "+e.message);console.error("Drive error:",e);return null});
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPhotoPreview(dataUrl,kb){
+  const szLabel=kb?" "+kb+"KB":"";
+  document.getElementById("photo-preview-area").innerHTML=`
+    <div class="photo-preview-wrap">
+      <img class="photo-preview" src="${dataUrl}" alt="Preview">
+      <div class="photo-overlay">
+        <span class="photo-badge">&#128247; Ready${szLabel}</span>
+        <button class="photo-remove" onclick="removePhoto()">Remove</button>
+      </div>
+    </div>`;
+}
+
+function removePhoto(){
+  currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
+  document.getElementById("photo-preview-area").innerHTML="";
+  document.getElementById("camera-input").value="";
+  // disable AI if no keywords either
+  const kw=document.getElementById("f-items").value.trim();
+  document.getElementById("ai-btn").disabled=!kw&&!currentPhotoBase64;
+}
+
+// ── AI CATEGORIZE (Vision + text) ─────────────────────────
+async function runAI(){
+  if(aiLoading)return;
+  const keywords=document.getElementById("f-items").value.trim();
+  const binId=document.getElementById("f-id").value.trim()||"BIN-001";
+  if(!currentPhotoBase64&&!keywords){toast("Add a photo or keywords first");return}
+  const apiKey=getApiKey();
+  if(!apiKey){
+    document.getElementById("ai-result-box").innerHTML='<div class="ai-result"><div class="ai-result-label">No API Key</div><div class="ai-result-text">Tap settings to enter your Anthropic API key.</div></div>';
+    return;
+  }
+  aiLoading=true;
+  const btn=document.getElementById("ai-btn");
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyzing...';
+
+  try{
+    // Build message content — image + text or text only
+    let msgContent;
+    if(currentPhotoBase64){
+      msgContent=[
+        {type:"image",source:{type:"base64",media_type:currentPhotoMime,data:currentPhotoBase64}},
+        {type:"text",text:`You are a home organization assistant. Bin ID: ${binId}.${keywords?" Additional keywords from owner: "+keywords:""}\n\nLook at the photo and identify what items are visible. Respond ONLY with raw JSON no markdown:\n{"category":"2-3 word label","room":"one of: Kitchen|Garage|Bedroom|Office|Attic|Basement|Kids|Holiday|Clothing|Tools|Sports|Books|Electronics|Seasonal|Other","tags":"3-5 comma-separated keywords","summary":"one sentence under 15 words describing contents"}`}
+      ];
+    }else{
+      msgContent=`Home organization assistant. Bin: ${binId}. Contents: ${keywords}\n\nRespond ONLY with raw JSON no markdown:\n{"category":"2-3 word label","room":"one of: Kitchen|Garage|Bedroom|Office|Attic|Basement|Kids|Holiday|Clothing|Tools|Sports|Books|Electronics|Seasonal|Other","tags":"3-5 comma-separated keywords","summary":"one sentence under 15 words"}`;
+    }
+
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:msgContent}]})
+    });
+    const data=await res.json();
+    if(data.error){throw new Error(data.error.message||JSON.stringify(data.error))}
+    const text=(data.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim();
+    let r;try{r=JSON.parse(text)}catch{r={}}
+    if(r.category)document.getElementById("f-cat").value=r.category;
+    if(r.room)document.getElementById("f-room").value=r.room;
+    if(r.tags)document.getElementById("f-tags").value=r.tags;
+    if(r.summary)document.getElementById("f-summary").value=r.summary;
+    document.getElementById("ai-result-box").innerHTML=`<div class="ai-result"><div class="ai-result-label">${currentPhotoBase64?"&#128247; Vision AI Applied":"&#10022; AI Applied"}</div><div class="ai-result-text">${r.summary||"Fields filled in below. Review and adjust if needed."}</div></div>`;
+  }catch(e){
+    document.getElementById("ai-result-box").innerHTML=`<div class="ai-result"><div class="ai-result-label">&#9888; Error</div><div class="ai-result-text">${e.message||"Unknown error"}. Check internet connection and API key.</div></div>`;
+  }
+  aiLoading=false;btn.disabled=false;btn.innerHTML="&#10022; AI Categorize";
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function rc(room){return ROOM_CFG[room]||ROOM_CFG.Other}
+function nextId(){if(!bins.length)return"BIN-001";const m=Math.max(...bins.map(b=>parseInt((b.id||"").replace(/\D/g,""))||0));return"BIN-"+String(m+1).padStart(3,"0")}
+function qrText(bin){return`${bin.id} | ${bin.category} | ${bin.room} | ${bin.summary||""} | ${bin.tags||""}`}
+function qrUrl(bin){
+  const deepLink="https://stalwart-kringle-d558c4.netlify.app/?bin="+encodeURIComponent(bin.id);
+  return"https://api.qrserver.com/v1/create-qr-code/?size=130x130&color=111827&bgcolor=ffffff&data="+encodeURIComponent(deepLink);
+}
+function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500)}
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById("screen-"+id).classList.add("active")}
+function clearSearch(){document.getElementById("search-inp").value="";renderList()}
+
+// ── LIST ──────────────────────────────────────────────────
+function showList(){
+  editingId=null;
+  currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
+  showScreen("list");renderList();
+}
+
+function renderList(){
+  const q=(document.getElementById("search-inp").value||"").toLowerCase();
+  document.getElementById("search-clear").style.display=q?"block":"none";
+  const filtered=bins.filter(b=>!q||[b.id,b.category,b.room,b.tags,b.items,b.summary].some(f=>(f||"").toLowerCase().includes(q)));
+  const rooms=[...new Set(bins.map(b=>b.room))].length;
+  document.getElementById("stats-row").innerHTML=bins.length>0?`<div class="stat"><div class="stat-n">${bins.length}</div><div class="stat-l">Bins</div></div><div class="stat"><div class="stat-n">${rooms}</div><div class="stat-l">Areas</div></div><div class="stat"><div class="stat-n">${filtered.length}</div><div class="stat-l">Showing</div></div>`:"";
+  document.getElementById("list-sub").textContent=bins.length===0?"No bins yet - tap + to start":"C3 Home Storage";
+  const el=document.getElementById("bin-list");
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">&#128230;</div><div class="empty-title">${bins.length===0?"No bins yet":"No results"}</div><div class="empty-desc">${bins.length===0?"Tap + to add your first bin.<br>Take a photo and let AI categorize it.":"Nothing matched"}</div></div>`;
+    return;
+  }
+  el.innerHTML=filtered.map(b=>{
+    const r=rc(b.room);
+    const imgEl=b.thumbUrl?`<img class="bin-thumb" src="${b.thumbUrl}" onerror="this.style.display='none'">`:`<div class="bin-emoji">${r.emoji}</div>`;
+    return`<div class="bin-card" style="border-left-color:${r.color}" onclick="showDetail('${b.id}')">${imgEl}<div class="bin-info"><div class="bin-id">${b.id}</div><div class="bin-cat">${b.category||"Uncategorized"}</div>${b.tags?`<div class="bin-tags">${b.tags}</div>`:""}</div><div class="bin-arrow">&#8250;</div></div>`;
+  }).join("");
+}
+
+// ── ADD / EDIT ─────────────────────────────────────────────
+function showAdd(){
+  editingId=null;
+  currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
+  document.getElementById("add-title").textContent="New Bin";
+  document.getElementById("f-id").value=nextId();
+  document.getElementById("f-items").value="";
+  document.getElementById("f-cat").value="";
+  document.getElementById("f-room").value="Other";
+  document.getElementById("f-tags").value="";
+  document.getElementById("f-summary").value="";
+  document.getElementById("ai-result-box").innerHTML="";
+  document.getElementById("photo-preview-area").innerHTML="";
+  document.getElementById("camera-input").value="";
+  document.getElementById("ai-btn").disabled=true;
+  document.getElementById("f-items").oninput=function(){
+    document.getElementById("ai-btn").disabled=!this.value.trim()&&!currentPhotoBase64;
+  };
+  showScreen("add");
+}
+
+function editCurrent(){
+  if(!currentDetail)return;
+  const bin=bins.find(b=>b.id===currentDetail);if(!bin)return;
+  editingId=bin.id;
+  currentPhotoBase64=null;currentPhotoMime=null;currentPhotoDataUrl=null;pendingPhotoUpload=null;
+  document.getElementById("add-title").textContent="Edit "+bin.id;
+  document.getElementById("f-id").value=bin.id;
+  document.getElementById("f-items").value=bin.items||"";
+  document.getElementById("f-cat").value=bin.category||"";
+  document.getElementById("f-room").value=bin.room||"Other";
+  document.getElementById("f-tags").value=bin.tags||"";
+  document.getElementById("f-summary").value=bin.summary||"";
+  document.getElementById("ai-result-box").innerHTML="";
+  document.getElementById("camera-input").value="";
+  // show existing photo if any
+  const prev=document.getElementById("photo-preview-area");
+  if(bin.thumbUrl){
+    prev.innerHTML=`<div class="photo-preview-wrap"><img class="photo-preview" src="${bin.thumbUrl}" alt="Current photo"><div class="photo-overlay"><span class="photo-badge">Current Photo</span><button class="photo-remove" onclick="removePhoto()">Replace</button></div></div>`;
+  }else{prev.innerHTML="";}
+  document.getElementById("ai-btn").disabled=!bin.items&&!bin.thumbUrl;
+  document.getElementById("f-items").oninput=function(){
+    document.getElementById("ai-btn").disabled=!this.value.trim()&&!currentPhotoBase64&&!bin.thumbUrl;
+  };
+  showScreen("add");
+}
+
+async function saveBin(){
+  const id=document.getElementById("f-id").value.trim()||nextId();
+  setSyncBar("syncing","Saving...");
+
+  let photoUrl="",thumbUrl="";
+
+  // if editing and no new photo, keep existing
+  if(editingId){
+    const existing=bins.find(b=>b.id===editingId);
+    if(existing){photoUrl=existing.photoUrl||"";thumbUrl=existing.thumbUrl||"";}
+  }
+
+  // wait for pending photo upload if any
+  if(pendingPhotoUpload){
+    try{
+      const result=await pendingPhotoUpload;
+      if(result){photoUrl=result.viewUrl||"";thumbUrl=result.thumbUrl||"";}
+    }catch(e){}
+  }
+
+  const bin={id,category:document.getElementById("f-cat").value.trim()||"Uncategorized",room:document.getElementById("f-room").value,tags:document.getElementById("f-tags").value.trim(),summary:document.getElementById("f-summary").value.trim(),items:document.getElementById("f-items").value.trim(),photoUrl,thumbUrl,updated:new Date().toISOString(),created:editingId?(bins.find(b=>b.id===editingId)?.created||new Date().toISOString()):new Date().toISOString()};
+
+  bins=[...bins.filter(b=>b.id!==id),bin].sort((a,b)=>a.id.localeCompare(b.id));
+  showList();
+  toast(editingId?`${id} updated`:`${id} saved`);
+  await pushToSheet();
+}
+
+// ── DETAIL ────────────────────────────────────────────────
+function showDetail(id){
+  const bin=bins.find(b=>b.id===id);if(!bin)return;
+  currentDetail=id;const r=rc(bin.room);
+  document.getElementById("d-id-title").textContent=bin.id;
+  document.getElementById("d-emoji").textContent=r.emoji;
+  document.getElementById("d-id").textContent=bin.id;
+  document.getElementById("d-cat").textContent=bin.category||"Uncategorized";
+  document.getElementById("d-room-chip").innerHTML=`<span class="room-chip" style="color:${r.color};border-color:${r.color}44;background:${r.color}18">${bin.room}</span>`;
+
+  // photo
+  const ps=document.getElementById("d-photo-sec");
+  if(bin.thumbUrl){
+    ps.style.display="block";
+    const img=document.getElementById("d-photo");
+    img.src=bin.thumbUrl;
+    img.onerror=function(){ps.style.display="none"};
+  }else ps.style.display="none";
+
+  const ss=document.getElementById("d-summary-sec");
+  if(bin.summary){ss.style.display="block";document.getElementById("d-summary").textContent=bin.summary}else ss.style.display="none";
+  const ts=document.getElementById("d-tags-sec");
+  if(bin.tags){ts.style.display="block";document.getElementById("d-tags").innerHTML=bin.tags.split(",").map(t=>`<span class="tag">${t.trim()}</span>`).join("")}else ts.style.display="none";
+  const is=document.getElementById("d-items-sec");
+  if(bin.items){is.style.display="block";document.getElementById("d-items").textContent=bin.items}else is.style.display="none";
+
+  const qr=document.getElementById("d-qr");
+  qr.src=qrUrl(bin);qr.onerror=function(){this.style.opacity=".3"};
+  // Populate printable label fields
+  document.getElementById("d-qr-binid").textContent=bin.id;
+  document.getElementById("d-qr-category").textContent=bin.category||"Uncategorized";
+  document.getElementById("d-qr-summary").textContent=bin.summary||"";
+  const roomEl=document.getElementById("d-qr-room");
+  const roomColor=rc(bin.room).color;
+  roomEl.textContent=bin.room;
+  roomEl.style.background=roomColor;
+  showScreen("detail");
+}
+
+function openPhoto(){
+  const bin=bins.find(b=>b.id===currentDetail);
+  if(bin&&bin.photoUrl)window.open(bin.photoUrl,"_blank");
+}
+
+function copyQR(){
+  const bin=bins.find(b=>b.id===currentDetail);if(!bin)return;
+  try{navigator.clipboard.writeText(qrText(bin)).then(()=>toast("QR text copied"))}catch{toast("Long-press to copy")}
+}
+
+async function deleteCurrent(){
+  if(!currentDetail)return;
+  if(!confirm(`Delete ${currentDetail}? This cannot be undone.`))return;
+  const id=currentDetail;
+  bins=bins.filter(b=>b.id!==id);
+  showList();toast(`${id} deleted`);
+  await pushToSheet();
+}
+
+// ── BOOT ──────────────────────────────────────────────────
+async function boot(){
+  if(!getApiKey()){showSetup(false);return;}
+  showScreen("list");
+  await syncFromSheet(true);
+  const params=new URLSearchParams(window.location.search);
+  const binParam=params.get("bin");
+  if(binParam){
+    const bin=bins.find(b=>b.id===binParam);
+    if(bin){showDetail(bin.id);}
+    else{toast("Bin "+binParam+" not found - try refreshing");}
+  }
+}
+boot();
+</script>
+</body>
+</html>
