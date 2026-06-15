@@ -1,0 +1,1 @@
+https://stalwart-kringle-d558c4.netlify.app/* https://bincatalog-srm.netlify.app/:splat 301!
